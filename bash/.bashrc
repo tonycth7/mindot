@@ -11,6 +11,7 @@ export PAAS_HOME="$HOME/paas"
 alias dw='z && ./dotfiles/Scripts/startx'
 alias wall='feh --bg-fill ~/pictures/wallpaper.jpg'
 alias ls='ls --color=auto'
+alias la='ls -la'
 alias grep='grep --color=auto'
 PS1='[\u@\h \W]\$ '
 eval "$(zoxide init bash)"
