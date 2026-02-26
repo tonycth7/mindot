@@ -13,8 +13,11 @@ alias wall='feh --bg-fill ~/pictures/wallpaper.jpg'
 alias ls='ls --color=auto'
 alias la='ls -la'
 alias grep='grep --color=auto'
+alias vi='nvim'
+alias vim='nvim'
 PS1='[\u@\h \W]\$ '
 eval "$(zoxide init bash)"
 fastfetch
 z
 . "$HOME/.cargo/env"
+export PATH=$PATH:~/statusbar
