@@ -1,0 +1,179 @@
+#!/usr/bin/env bash
+# passx — advanced helper for pass (flags + fzf + otp, FIXED)
+
+set -u
+
+PASSWORD_STORE_DIR="${PASSWORD_STORE_DIR:-$HOME/.password-store}"
+
+# -------------------------------
+# Clipboard
+# -------------------------------
+copy_clipboard() {
+  if command -v wl-copy >/dev/null 2>&1; then
+    wl-copy
+    echo "✔ Copied (Wayland)"
+  elif command -v xclip >/dev/null 2>&1 && [ -n "${DISPLAY:-}" ]; then
+    xclip -selection clipboard
+    echo "✔ Copied (X11)"
+  else
+    cat
+    echo
+    echo "⚠ No clipboard available (TTY mode)"
+  fi
+}
+
+# -------------------------------
+# Password generator
+# -------------------------------
+gen_password() {
+  local length="$1"
+  LC_ALL=C tr -dc 'A-Za-z0-9@#%+=_' </dev/urandom | head -c "$length"
+}
+
+# -------------------------------
+# CORRECT fzf picker
+# -------------------------------
+pick_entry() {
+  if ! command -v fzf >/dev/null 2>&1; then
+    echo "❌ fzf not installed"
+    return 1
+  fi
+
+  find "$PASSWORD_STORE_DIR" -type f -name '*.gpg' \
+    | sed "s|^$PASSWORD_STORE_DIR/||; s|\.gpg$||" \
+    | sort \
+    | fzf
+}
+
+# -------------------------------
+# Add (smart args)
+# -------------------------------
+cmd_add() {
+  [ "$#" -lt 1 ] && { echo "Usage: passx add <path> [email] [username] [notes] [length]"; return 1; }
+
+  local path="$1"; shift
+  local email="" user="" notes="" length="32"
+
+  for arg in "$@"; do
+    if [[ "$arg" =~ @ ]]; then
+      email="$arg"
+    elif [[ "$arg" =~ ^[0-9]+$ ]]; then
+      length="$arg"
+    elif [ -z "$user" ]; then
+      user="$arg"
+    else
+      notes="$arg"
+    fi
+  done
+
+  password="$(gen_password "$length")"
+
+  {
+    echo "$password"
+    [ -n "$email" ] && echo "email: $email"
+    [ -n "$user" ] && echo "username: $user"
+    [ -n "$notes" ] && echo "notes: $notes"
+  } | pass insert -m "$path"
+
+  echo "✔ Added: $path"
+}
+
+# -------------------------------
+# Field extraction
+# -------------------------------
+extract_field() {
+  local path="$1" field="$2"
+
+  case "$field" in
+    password) pass show "$path" | sed -n '1p' ;;
+    email|username|notes)
+      pass show "$path" | awk -F': ' "/^$field:/ {print \$2}" ;;
+    full) pass show "$path" ;;
+    *)
+      echo "❌ Unknown field"
+      return 1 ;;
+  esac
+}
+
+# -------------------------------
+# Show / Copy with flags
+# -------------------------------
+cmd_show_copy() {
+  local mode="$1"; shift
+  local path="" field="password"
+
+  OPTIND=1
+  while getopts ":puefn" opt; do
+    case "$opt" in
+      p) field="password" ;;
+      u) field="username" ;;
+      e) field="email" ;;
+      n) field="notes" ;;
+      f) field="full" ;;
+    esac
+  done
+  shift $((OPTIND - 1))
+
+  path="${1:-}"
+  [ -z "$path" ] && path="$(pick_entry)"
+  [ -z "$path" ] && return 1
+
+  if [ "$mode" = "copy" ]; then
+    extract_field "$path" "$field" | tr -d '\n' | copy_clipboard
+  else
+    extract_field "$path" "$field"
+  fi
+}
+
+# -------------------------------
+# OTP
+# -------------------------------
+cmd_otp() {
+  local path="${1:-}"
+  [ -z "$path" ] && path="$(pick_entry)"
+  [ -z "$path" ] && return 1
+
+  if pass otp "$path" >/dev/null 2>&1; then
+    pass otp "$path" | tr -d '\n' | copy_clipboard
+  else
+    echo "❌ OTP not configured for $path"
+  fi
+}
+
+# -------------------------------
+# Help
+# -------------------------------
+cmd_help() {
+  cat <<EOF
+passx — advanced pass helper
+
+Add:
+  passx add <path> [email] [username] [notes] [length]
+
+Show:
+  passx show <path> -p|-u|-e|-n|-f
+  passx show -p            (fzf picker)
+
+Copy:
+  passx copy <path> -p|-u|-e|-n
+  passx copy -u            (fzf picker)
+
+OTP:
+  passx otp <path>
+  passx otp                (fzf picker)
+EOF
+}
+
+# -------------------------------
+# Dispatcher
+# -------------------------------
+case "${1:-}" in
+  add)  shift; cmd_add "$@" ;;
+  show) shift; cmd_show_copy show "$@" ;;
+  copy) shift; cmd_show_copy copy "$@" ;;
+  otp)  shift; cmd_otp "$@" ;;
+  help|"") cmd_help ;;
+  *)
+    echo "❌ Unknown command: $1"
+    cmd_help ;;
+esac
