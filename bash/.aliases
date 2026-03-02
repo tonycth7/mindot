@@ -1,0 +1,113 @@
+###############################################################################
+# ~/.aliases — shared aliases & functions (bash + zsh)
+###############################################################################
+
+###############################################################################
+# Core aliases (safe & familiar)
+###############################################################################
+
+alias vi='nvim'
+alias vim='nvim'
+alias lg='lazygit'
+
+alias grep='grep --color=auto'
+
+###############################################################################
+# Safer defaults (interactive, shell-only)
+###############################################################################
+
+alias cp='cp -iv'
+alias mv='mv -iv'
+alias rm='rm -iv'
+alias mkdir='mkdir -pv'
+
+###############################################################################
+# Modern replacements
+###############################################################################
+
+# ripgrep
+alias rg='rg --smart-case --hidden --follow'
+alias rgi='rg --ignore-case'
+alias rgf='rg --files'
+
+# fd
+alias fd='fd --hidden --follow --exclude .git'
+alias fdd='fd --type d'
+alias fdf='fd --type f'
+
+# eza (ls replacement)
+alias l='eza --icons --group-directories-first'
+alias ll='eza -lh --icons --group-directories-first'
+alias lla='eza -lah --icons --group-directories-first'
+alias la='eza -ha --icons --group-directories-first'
+alias lt='eza --tree --icons'
+
+# bat (cat replacement)
+alias cat='bat --style=plain'
+alias batp='bat --paging=always'
+alias bath='bat --style=header,grid'
+
+###############################################################################
+# Pager quality-of-life
+###############################################################################
+
+export LESS='-R --use-color -F -X'
+
+###############################################################################
+# fzf-powered workflows
+###############################################################################
+
+# Open file in nvim (fd + fzf + bat)
+vf() {
+  local file
+  file=$(fd --type f | fzf --preview 'bat --style=numbers --color=always {}') || return
+  nvim "$file"
+}
+
+# Search code and open at line (rg + fzf + bat + nvim)
+vgl() {
+  local file
+  file=$(rg --files-with-matches . |
+         fzf --preview 'bat --style=numbers --color=always {}') || return
+  nvim "$file"
+}
+# cd using fzf (no zoxide needed)
+cdf() {
+  local dir
+  dir=$(fd --type d | fzf) || return
+  cd "$dir"
+}
+# Smart directory jump (zoxide + fzf)
+zf() {
+  local dir
+  dir=$(zoxide query -l | fzf) || return
+  cd "$dir"
+}
+# Edit file OR cd into directory (smart)
+ve() {
+  local target
+  target=$(fd | fzf --preview '[[ -d {} ]] && eza -T --icons {} || bat --style=numbers --color=always {}') || return
+  [[ -d "$target" ]] && cd "$target" || nvim "$target"
+}
+
+###############################################################################
+# Git helpers (fzf-powered, safe)
+###############################################################################
+
+# Checkout branch with preview
+gco() {
+  local branch
+  branch=$(git branch --all --color=always |
+           sed 's/^[* ] //' |
+           fzf --preview 'git log --oneline --decorate --color=always {}') || return
+  git checkout "${branch##*/}"
+}
+
+###############################################################################
+# Small quality-of-life helpers
+###############################################################################
+
+alias cls='clear'
+alias duh='du -h --max-depth=1'
+alias path='echo -e ${PATH//:/\\n}'
+alias reload='exec $SHELL'

@@ -1,4 +1,3 @@
-#
 # ~/.bashrc
 #
 
@@ -11,25 +10,10 @@ export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 export EDITOR=nvim
 export PATH="$HOME/.local/bin:$PATH"  #Pass extra fuctions
+#Aliases
+[ -f ~/.aliases ] && source ~/.aliases
 
-alias dw='z && ./dotfiles/Scripts/startx'
-alias wall='feh --bg-fill ~/pictures/wallpaper.jpg'
-alias ls='ls --color=auto'
-alias la='ls -la'
-alias grep='grep --color=auto'
-alias vi='nvim'
-alias vim='nvim'
-alias lg='lazygit'
-##
 #BINDING
-# fzf key bindings (completion + history)
-if [ -f /usr/share/fzf/key-bindings.bash ]; then
-  source /usr/share/fzf/key-bindings.bash
-fi
-
-if [ -f /usr/share/fzf/completion.bash ]; then
-  source /usr/share/fzf/completion.bash
-fi
 
 #PROMPT LOOK
 
@@ -48,22 +32,36 @@ __lang_hint() {
   compgen -G "*.sh" >/dev/null && echo " "
 }
 
-PS1=$'\[\e[36m\]┌[\[\e[97m\]\u \[\e[94m\]\w\[\e[35m\]$(__lang_hint)\[\e[33m\]$(__git_branch)\[\e[36m\]]\n└\[\e[97m\]› \[\e[0m\]'
+PS1=$'\[\e[36m\]┌[\[\e[97m\]\u \[\e[94m\]\w\[\e[35m\]$(__lang_hint)\[\e[33m\]$(__git_branch)\[\e[36m\]]\n└\[\e[97m\]❯ \[\e[0m\]'
 
 ##
 #HISTORY
-# History behavior
+# ───────────────────────────── History settings ───────────────────────────── #
 shopt -s histappend
 HISTSIZE=10000
 HISTFILESIZE=20000
 HISTCONTROL=ignoredups:erasedups
-PROMPT_COMMAND="history -a; history -c; history -r"
-# fzf history search
+PROMPT_COMMAND='history -a; history -n'
+
+# ───────────────────────────── fzf integration ────────────────────────────── #
+source /usr/share/fzf/key-bindings.bash
+source /usr/share/fzf/completion.bash
+
 __fzf_history() {
-  history | sed 's/ *[0-9]* *//' | fzf --height=40% --reverse
+  local selected
+  selected=$(
+    history |
+      sed 's/^[ ]*[0-9]\+[ ]*//' |
+      tac |
+      fzf --height=40% --reverse --prompt='History > '
+  ) || return
+
+  READLINE_LINE="$selected"
+  READLINE_POINT=${#READLINE_LINE}
 }
 
-bind -x '"\C-r": "__fzf_history"'
+# ✅ CORRECT binding
+bind -x '"\C-r": __fzf_history'
 ##
 eval "$(zoxide init bash)"
 fastfetch
