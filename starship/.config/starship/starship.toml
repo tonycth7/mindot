@@ -1,1 +1,96 @@
-/home/tony/.local/share/mybash/starship.toml
+add_newline = false
+command_timeout = 1500
+
+format = """
+$username$directory$git_branch$git_status\
+$rust$cpp$c$python$nodejs$golang$java$docker_context\
+$cmd_duration
+$character
+"""
+
+# ── User / Host ──────────────────
+[username]
+show_always = true
+style_user = "bold #cba6f7"
+format = "[$user]($style) "
+
+[hostname]
+ssh_only = false
+style = "bold #89b4fa"
+format = "[@$hostname]($style) "
+
+# ── Directory ─────────────────────
+[directory]
+style = "bold #a6e3a1"
+truncation_length = 3
+truncate_to_repo = true
+format = "[ $path]($style) "
+
+# ── Git ───────────────────────────
+[git_branch]
+symbol = " "
+style = "bold #f5c2e7"
+format = "[$symbol$branch]($style) "
+
+[git_status]
+style = "bold #f38ba8"
+format = "([$all_status$ahead_behind]($style)) "
+
+# ── Rust ──────────────────────────
+[rust]
+symbol = " "
+style = "bold #fab387"
+format = "[$symbol($version )]($style)"
+
+# ── C++ ───────────────────────────
+[cpp]
+symbol = " "
+style = "bold #89dceb"
+format = "[$symbol($version )]($style)"
+
+# ── C ─────────────────────────────
+[c]
+symbol = " "
+style = "bold #74c7ec"
+format = "[$symbol($version )]($style)"
+
+# ── Python ────────────────────────
+[python]
+symbol = " "
+style = "bold #f9e2af"
+format = "[$symbol($version )]($style)"
+
+# ── NodeJS ────────────────────────
+[nodejs]
+symbol = " "
+style = "bold #a6e3a1"
+format = "[$symbol($version )]($style)"
+
+# ── Go ────────────────────────────
+[golang]
+symbol = " "
+style = "bold #89b4fa"
+format = "[$symbol($version )]($style)"
+
+# ── Java ──────────────────────────
+[java]
+symbol = " "
+style = "bold #f38ba8"
+format = "[$symbol($version )]($style)"
+
+# ── Docker ────────────────────────
+[docker_context]
+symbol = " "
+style = "bold #94e2d5"
+format = "[$symbol$context ]($style)"
+
+# ── Command Duration ──────────────
+[cmd_duration]
+min_time = 800
+format = "[󱎫 $duration]($style) "
+style = "bold #fab387"
+
+# ── Prompt Symbol ─────────────────
+[character]
+success_symbol = "[❯](bold #a6e3a1)"
+error_symbol   = "[❯](bold #f38ba8)"
