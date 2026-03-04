@@ -3,44 +3,56 @@ live_config_reload = true
 working_directory = "None"
 
 # Themes --
-import = [ 
+import = [
   "~/.config/alacritty/nordic.toml",
   "~/.config/alacritty/keybinds.toml"
 ]
 
 [window]
 title = "Alacritty"
-decorations = "none"
-blur = true
-opacity = 0.9
-padding.x = 10
-padding.y = 10
+decorations = "none"        # minimal clean look
+opacity = 0.92              # slightly less transparent (better readability)
+blur = true                 # works well in Hyprland
+dynamic_padding = true
 
-[window.dimensions]
-columns = 160
-lines = 80
+[window.padding]
+x = 17
+y = 17
+
+# Let laptop decide size dynamically (better for tiling WM)
+# Remove fixed dimensions for better responsiveness
+# [window.dimensions]
+# columns = 130
+# lines = 50
+
+[cursor]
+thickness = 0.2
+unfocused_hollow = true
 
 [cursor.style]
-shape= "Beam"
-blinking = "Never"
+shape = "Beam"
+blinking = "Off"
 
 [colors]
-#transparent_background_colors = true
 draw_bold_text_with_bright_colors = true
+transparent_background_colors = true
 
 [env]
 TERM = "xterm-256color"
 
 [font]
-#glyph_offset = { x = 1, y = 0 }
-normal.family = "MesloLGS Nerd Font Mono"
-normal.style = "Regular"
-size = 16.0
+size = 14.5                 # 16 is big for most laptops
 
-[font.bold]
-family = "MesloLGS Nerd Font Mono"
-style = "Bold"
+normal = { family = "MesloLGS Nerd Font Mono", style = "Regular" }
+bold   = { family = "MesloLGS Nerd Font Mono", style = "Bold" }
+italic = { family = "MesloLGS Nerd Font Mono", style = "Italic" }
 
-[font.italic]
-family = "MesloLGS Nerd Font Mono"
-style = "Italic"
+# Slight letter spacing for readability
+offset = { x = 0, y = 1 }
+
+# Performance tweaks
+[scrolling]
+history = 5000              # reduce from default 10000 (saves memory)
+
+[selection]
+save_to_clipboard = true
