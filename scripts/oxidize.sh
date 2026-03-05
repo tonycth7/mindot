@@ -76,6 +76,7 @@ CORE_CLI=(
   dust 
   dua-cli
   aria2
+  fsel-git
 )
 
 install_group "Core CLI tools" "${CORE_CLI[@]}"
