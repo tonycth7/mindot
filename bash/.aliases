@@ -44,7 +44,6 @@ alias lt='eza --tree --icons'
 alias lf='eza -fa --icons'
 alias ld='eza -Da --icons'
 # bat (cat replacement)
-alias cat='bat --style=plain'
 alias batp='bat --paging=always'
 alias bath='bat --style=header,grid'
 

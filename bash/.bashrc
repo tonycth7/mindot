@@ -1,53 +1,80 @@
-# ~/.bashrc
-#
+###############################################################################
+# Tony's Bash Setup (Modern CLI)
+###############################################################################
 
-# If not running interactively, don't do anything
+# Exit if not interactive
 [[ $- != *i* ]] && return
-[[ -r /usr/share/bash-completion/bash_completion ]] && \
+
+###############################################################################
+# Bash completion
+###############################################################################
+
+if [[ -r /usr/share/bash-completion/bash_completion ]]; then
   source /usr/share/bash-completion/bash_completion
+fi
+
+###############################################################################
+# Environment
+###############################################################################
 
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 export EDITOR=nvim
-export PATH="$HOME/.local/bin:$PATH"  #Pass extra fuctions
-#Aliases
+export PATH="$HOME/.local/bin:$PATH"
+
+###############################################################################
+# Source aliases
+###############################################################################
+
 [ -f ~/.aliases ] && source ~/.aliases
 
-#BINDING
+###############################################################################
+# HISTORY SETTINGS
+###############################################################################
 
-#PROMPT LOOK
-
-#__git_branch() {
-#  git rev-parse --is-inside-work-tree &>/dev/null || return
-#  git branch --show-current 2>/dev/null | sed 's/^/  /'
-#}
-#__lang_hint() {
-#  compgen -G build.zig     >/dev/null && { echo " ⚡"; return; }
-#  compgen -G Cargo.toml   >/dev/null && { echo " 🦀"; return; }
-#  compgen -G go.mod       >/dev/null && { echo " 🐹"; return; }
-#  compgen -G "*.c" "*.h" "*.cpp" "*.hpp" "*.cc" "*.cxx" >/dev/null && { echo " ⚙"; return; }
-#  compgen -G "*.s" "*.S" "*.asm" >/dev/null && { echo " 🧬"; return; }
-#  compgen -G pyproject.toml requirements.txt >/dev/null && { echo " 🐍"; return; }
-#  compgen -G package.json >/dev/null && { echo " ⬢"; return; }
-#  compgen -G "*.sh" >/dev/null && echo " "
-#}
-
-#PS1=$'\[\e[36m\]┌[\[\e[97m\]\u \[\e[94m\]\w\[\e[35m\]$(__lang_hint)\[\e[33m\]$(__git_branch)\[\e[36m\]]\n└\[\e[97m\]❯ \[\e[0m\]'
-
-export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
-eval "$(starship init bash)"
-##
-#HISTORY
-# ───────────────────────────── History settings ───────────────────────────── #
 shopt -s histappend
+
 HISTSIZE=10000
 HISTFILESIZE=20000
 HISTCONTROL=ignoredups:erasedups
-ROMPT_COMMAND='history -a; history -n'
 
-# ───────────────────────────── fzf integration ────────────────────────────── #
-source /usr/share/fzf/key-bindings.bash
-source /usr/share/fzf/completion.bash
+# realtime history sync between terminals
+PROMPT_COMMAND='history -a; history -n'
+
+###############################################################################
+# FZF + FD SEARCH
+###############################################################################
+
+export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+
+export FZF_DEFAULT_OPTS="
+--height 45%
+--layout=reverse
+--border
+--info=inline
+"
+fzf-cd-widget() {
+  local dir
+  dir=$(
+    fd --type d --hidden --exclude .git |
+    fzf --height 40% --reverse --border \
+        --preview 'eza --tree --level=2 --icons {}'
+  ) || return
+  cd "$dir"
+}
+
+bind -x '"\ec": fzf-cd-widget'
+###############################################################################
+# FZF KEYBINDINGS + COMPLETION
+###############################################################################
+
+[ -f /usr/share/fzf/key-bindings.bash ] && source /usr/share/fzf/key-bindings.bash
+[ -f /usr/share/fzf/completion.bash ] && source /usr/share/fzf/completion.bash
+
+###############################################################################
+# FZF HISTORY SEARCH (better CTRL+R)
+###############################################################################
 
 __fzf_history() {
   local selected
@@ -62,10 +89,34 @@ __fzf_history() {
   READLINE_POINT=${#READLINE_LINE}
 }
 
-# ✅ CORRECT binding
 bind -x '"\C-r": __fzf_history'
-##
+
+###############################################################################
+# ZOXIDE (SMART CD)
+###############################################################################
+
 eval "$(zoxide init bash)"
-fastfetch
-z
-. "$HOME/.cargo/env"
+
+###############################################################################
+# STARSHIP PROMPT
+###############################################################################
+
+export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
+eval "$(starship init bash)"
+
+###############################################################################
+# RUST CARGO ENV
+###############################################################################
+
+[ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
+
+###############################################################################
+# STARTUP PROGRAMS
+###############################################################################
+
+command -v fastfetch >/dev/null && fastfetch
+
+###############################################################################
+# SHORTCUTS
+###############################################################################
+
